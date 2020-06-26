@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from plotnine import *
 # IMPORTANT: use plotine v0.5.1, later versions might not work as expected
 from scipy import stats
-import scikit_posthocs
+#import scikit_posthocs
 from collections import defaultdict
 from scipy.spatial import distance
 import seaborn as sns

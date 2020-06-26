@@ -20,6 +20,8 @@ from scipy import ndimage
 # %% Figure 2D
 # Data loading and plot
 
+
+
 d_flat_mono_mt_ends = pd.read_csv('./data/microtubule_distribution_tips.csv')
 p_microtubule_dist_ends = ggplot(d_flat_mono_mt_ends, aes('Length')) + geom_histogram(aes(y='..density..'),binwidth=0.7) + geom_density() + \
     theme_classic() + xlim(0,25)

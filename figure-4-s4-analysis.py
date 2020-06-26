@@ -4,12 +4,11 @@ Script used for data analysis linked to Figure 4 and S4
 
 # %% General imports and setup
 
-import matplotlib
 import os
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
-
+plt.close('all')
 this_directory = os.getcwd()
 main_path  = this_directory
 #### define a function which collects data from csv file ####
@@ -25,7 +24,6 @@ def load_data_shapes(file_name):
         this_list_time = []
         this_list_long_axis = []
         this_list_short_axis = []
-        this_label = ''
         for row in readCSV:
             if len(row) == 0: #Skip empty line
                 continue
@@ -33,28 +31,28 @@ def load_data_shapes(file_name):
                 #save current list
                 if(len(this_list_time)>0):
                     cell_shape_data.append([np.array(this_list_time),
-                                            np.array(this_list_short_axis),
-                                            np.array(this_list_long_axis)])
+                                            np.array(this_list_long_axis),
+                                            np.array(this_list_short_axis)])
                 #create new list
                 cell_id = int(row[1])
                 this_list_time = []
                 this_list_short_axis = []
                 this_list_long_axis = []
             this_list_time.append(float(row[0]))
-            this_list_short_axis.append(float(row[2])/2.0) ##factor 2 to obtain semi-short axis
-            this_list_long_axis.append(float(row[3])/2.0) ##factor 2 to obtain semi-long axis
+            this_list_long_axis.append(float(row[2])/2.0) ##factor 2 tof obtain semi-long axis
+            this_list_short_axis.append(float(row[3])/2.0) ##factor 2 to obtain semi-short axis
          #save final list at the end of the file
         if(len(this_list_time)>0):
             cell_shape_data.append([np.array(this_list_time),
-                                    np.array(this_list_short_axis),
-                                    np.array(this_list_long_axis)])
+                                    np.array(this_list_long_axis),
+                                    np.array(this_list_short_axis)])
     return cell_shape_data
 #### dictionaries that will contain data####
 #### LOAD DATA  ####
 path = main_path + '/data/Micropattern_shape.csv'
 cell_shape_data_micropattern = load_data_shapes(path)
 
-# %% Data preparation for Figure 4C
+# %% Data preparation for Figure S4C
 
 micropattern_pairs = []
 for k in range(len(cell_shape_data_micropattern)):
@@ -64,7 +62,6 @@ for k in range(len(cell_shape_data_micropattern)):
                                            cell_shape_data_micropattern[k][1],
                                            cell_shape_data_micropattern[k][2])])
 from collections import defaultdict
-#first for control
 long_axis_micropattern_by_time = defaultdict(list)
 short_axis_micropattern_by_time = defaultdict(list)
 for this_pair in micropattern_pairs:
@@ -84,22 +81,7 @@ for this_time in time_array_micropattern:
     short_axis_micropattern_std.append(np.nanstd(np.array(short_axis_micropattern_by_time[this_time])))
 
 
-# Plot of Figure 4C
-plt.errorbar(time_array_micropattern, long_axis_micropattern_mean, long_axis_micropattern_std)
-plt.errorbar(time_array_micropattern, short_axis_micropattern_mean, short_axis_micropattern_std)
-plt.title('Cell semi-short and semi-long axis as a function of time (micropattern)', fontsize=15)
-plt.xlabel('Time relative to NEB (minutes)', fontsize=15)
-plt.ylabel('Length (um)', fontsize=15)
-plt.box(False)
-plt.grid(True)
-plt.axhline(y=0, color='black')
-plt.axvline(x=0, color='black')
-plt.xticks(fontsize=15, rotation=0)
-plt.yticks(fontsize=15, rotation=0)
-plt.show()
-
-
-# Figure S4C
+#perform fit to experimental data of cell shape
 from scipy.optimize import minimize
 def fitted_function(time, L, Lm0, tm0, taum):
     return L + (Lm0 - L) * (1.0 - np.tanh((time - tm0) / taum))/2.0
@@ -110,7 +92,8 @@ res = minimize(lambda x: np.sum(np.square(fitted_function(time_array_micropatter
                                )
                , [11, 20, 5, 5,10,5,3])
 x_min_long_short = res.x
-
+# Figure S4C
+plt.figure()
 plt.errorbar(time_array_micropattern,
              long_axis_micropattern_mean,
              long_axis_micropattern_std,
@@ -136,7 +119,7 @@ plt.plot(time_array_fine_grained, fitted_function(time_array_fine_grained,
                                                   x_min_long_short[6]),
          lw=3,
          color='orange')
-plt.title('Cell semi-short and semi-long axis as a function of time, micropatterns', fontsize=15)
+plt.title('Cell semi-short and semi-long axis\n as a function of time, micropatterns', fontsize=15)
 plt.xlabel('Time relative to NEB (minutes)', fontsize=15)
 plt.ylabel('Length (um)', fontsize=15)
 plt.box(False)
@@ -145,6 +128,7 @@ plt.axhline(y=0, color='black')
 plt.axvline(x=0, color='black')
 plt.xticks(fontsize=15, rotation=0)
 plt.yticks(fontsize=15, rotation=0)
+plt.tight_layout()
 plt.show()
 
 # Data load and preparation for Figure S4D-E
@@ -162,7 +146,6 @@ def load_data_shapes(file_name):
         this_list_long_axis = []
         this_list_short_axis = []
         this_list_aspect_ratio = []
-        this_label = ''
         for row in readCSV:
             if len(row) == 0: #Skip empty line
                 continue
@@ -180,8 +163,8 @@ def load_data_shapes(file_name):
                 this_list_long_axis = []
                 this_list_aspect_ratio = []
             this_list_time.append(float(row[1]))
-            this_list_short_axis.append(float(row[3]) / 2.0) #divide by 2 to obtain the semi-short axis
             this_list_long_axis.append(float(row[2]) / 2.0) #divide by 2 to obtain the semi-long axis
+            this_list_short_axis.append(float(row[3]) / 2.0) #divide by 2 to obtain the semi-short axis
             this_list_aspect_ratio.append(float(row[2])/float(row[3])) #ratio: long over short
          #save final list at the end of the file
         if(len(this_list_time)>0):
@@ -228,7 +211,7 @@ for this_time in time_array_DNA:
     aspect_ratio_DNA_std.append(np.nanstd(np.array(aspect_ratio_DNA_by_time[this_time])))
 
 # Plot of Figure S4D
-
+plt.figure()
 plt.errorbar(time_array_DNA,
              long_axis_DNA_mean,
              long_axis_DNA_std,
@@ -248,11 +231,12 @@ plt.axhline(y=0, color='black')
 plt.axvline(x=0, color='black')
 plt.xticks(fontsize=15, rotation=0)
 plt.yticks(fontsize=15, rotation=0)
+plt.tight_layout()
 plt.show()
 
 
 # Plot of Figure S4E
-
+plt.figure()
 plt.errorbar(time_array_DNA,
              aspect_ratio_DNA_mean,
              aspect_ratio_DNA_std,
@@ -267,6 +251,7 @@ plt.axhline(y=0, color='black')
 plt.axvline(x=0, color='black')
 plt.xticks(fontsize=15, rotation=0)
 plt.yticks(fontsize=15, rotation=0)
+plt.tight_layout()
 plt.show()
 
 
@@ -287,7 +272,6 @@ def load_data_LGN(file_name):
         this_list_angles_for_LGN = []
         this_list_LGN = []
         this_list_spindle_angle = []
-        this_label = ''
         for row in readCSV:
             if len(row) == 0: #Skip empty line
                 continue
@@ -383,14 +367,53 @@ for this_cell in range(len(all_angles)):
         all_angles_ordered[this_cell][this_time] = this_angles[this_angles.argsort()]
         all_LGN_ordered[this_cell][this_time] = this_LGN[this_angles.argsort()]
 
+# Plot of Figure 4C
+mean_semi_long_axis = []
+mean_semi_short_axis = []
+std_semi_long_axis = []
+std_semi_short_axis = []
+for this_time,_ in enumerate(all_times[0]):
+    semi_long_axis_vect=[all_long_axis[k][this_time]/2.0
+                         for k in range(len(all_times))]#len(all_times)= number of cells
+    semi_short_axis_vect=[all_short_axis[k][this_time]/2.0
+                         for k in range(len(all_times))]
+    mean_semi_long_axis.append(np.mean(semi_long_axis_vect))
+    mean_semi_short_axis.append(np.mean(semi_short_axis_vect))
+    std_semi_long_axis.append(np.std(semi_long_axis_vect))
+    std_semi_short_axis.append(np.std(semi_short_axis_vect))
+plt.errorbar(all_times[0],
+             mean_semi_long_axis,
+             std_semi_long_axis,
+             marker='o',
+             capsize=3,
+             lw=3)
+plt.errorbar(all_times[0],
+             mean_semi_short_axis,
+             std_semi_short_axis,
+             marker='o',
+             capsize=3,
+             lw=3)
+plt.title('Cell semi-short and semi-long axis as a function of time', fontsize=15)
+plt.xlabel('Time relative to NEB (minutes)', fontsize=15)
+plt.ylabel('Length (um)', fontsize=15)
+plt.box(False)
+plt.grid(True)
+plt.axhline(y=0, color='black')
+plt.axvline(x=0, color='black')
+plt.xticks(fontsize=15, rotation=0)
+plt.yticks(fontsize=15, rotation=0)
+# plt.savefig('Graphs/Semi_long_short_axis_LGN_cells.eps', bbox_inches="tight")
+plt.tight_layout()
+plt.show()
 
 # Plot of Figure S4I
-this_cell = 3
-for k in range(0, len(all_angles[this_cell]), 3):#take a subset of time points
-    plt.plot(all_angles_ordered[this_cell][k],
-             all_LGN_ordered[this_cell][k],
+plt.figure()
+this_cell_for_plot = 3
+for k in range(0, len(all_angles[this_cell_for_plot]), 3):#take a subset of time points
+    plt.plot(all_angles_ordered[this_cell_for_plot][k],
+             all_LGN_ordered[this_cell_for_plot][k],
              lw=2,
-             label=str(all_times[this_cell][k])+' mins')
+             label=str(all_times[this_cell_for_plot][k])+' mins')
 plt.ylim([0, 4.0])
 plt.title('Profile of LGN intensity', fontsize=15)
 plt.xlabel('Angle relative to long axis (rad)', fontsize=15)
@@ -474,6 +497,7 @@ for this_time in range(len(all_angles_ordered[0])):
                                          for this_cell
                                          in range(len(all_angles_ordered))])))
 #plot the evolution of nematic order S for each cell, and its average
+plt.figure()
 for this_cell in range(len(all_angles_ordered)):
     plt.plot(all_times[this_cell], S_vect[this_cell])
 plt.errorbar(all_times[0], S_vect_mean, S_vect_std,marker='o', color='blue',
@@ -490,7 +514,10 @@ plt.axvline(x=0, color='black')
 plt.xticks(fontsize=15, rotation=0)
 plt.yticks(fontsize=15, rotation=0)
 plt.ylim([0, 0.36])
+plt.tight_layout()
 plt.show()
+
+plt.figure()
 #plot the evolution of nematic angles for each cell
 for this_cell in range(len(all_angles_ordered)):
     plt.plot(all_times[this_cell], phi_vect[this_cell])
@@ -504,25 +531,10 @@ plt.axvline(x=0, color='black')
 plt.xticks(fontsize=15, rotation=0)
 plt.yticks(fontsize=15, rotation=0)
 plt.ylim([-np.pi/2.0, np.pi/2.0])
+plt.tight_layout()
 plt.show()
-#plot the evolution of Qxx for each cell, as well as the mean
-for this_cell in range(len(all_angles_ordered)):
-    plt.plot(all_times[this_cell], Qxx_vect[this_cell])
-plt.errorbar(all_times[0], Qxx_vect_mean, Qxx_vect_std,marker='o', color='blue',
-             lw=3,
-             capsize=3,
-             capthick=3)
-plt.title('Qxx as a function of time', fontsize=15)
-plt.xlabel('Time after NEB (minutes)', fontsize=15)
-plt.ylabel('Qxx', fontsize=15)
-plt.box(False)
-plt.grid(True)
-plt.axhline(y=0, color='black')
-plt.axvline(x=0, color='black')
-plt.xticks(fontsize=15, rotation=0)
-plt.yticks(fontsize=15, rotation=0)
-plt.ylim([-0.3, 0.3])
-plt.show()
+
+plt.figure()
 #plot the evolution of the LGN nematic angle alignment for each cell, as well as the mean
 for this_cell in range(len(all_angles_ordered)):
     plt.plot(all_times[this_cell], a_vect[this_cell])
@@ -540,6 +552,7 @@ plt.axvline(x=0, color='black')
 plt.xticks(fontsize=15, rotation=0)
 plt.yticks(fontsize=15, rotation=0)
 plt.ylim([-1.2, 1.2])
+plt.tight_layout()
 plt.show()
 
 
@@ -608,6 +621,7 @@ for k in range(len(angle_data_LGN)):
         angle_data_LGN[k][1] = angle_data_LGN[k][1] - np.pi
 
 # Plot of Figure 4K
+plt.figure()
 for k in range(len(angle_data_control)):
     plt.plot(angle_data_control[k][0], angle_data_control[k][1])
 plt.title('Angles as a function of time (control)', fontsize=15)
@@ -621,9 +635,11 @@ plt.axhline(y=0, color='black')
 plt.axvline(x=0, color='black')
 plt.xticks(np.arange(0, 21, 5), fontsize=15, rotation=0)
 plt.yticks(fontsize=15, rotation=0)
+plt.tight_layout()
 plt.show()
 
 # Plot of Figure 4O
+plt.figure()
 for k in range(len(angle_data_LGN)):
     plt.plot(angle_data_LGN[k][0], angle_data_LGN[k][1])
 plt.title('Angles as a function of time (LGN RNAi)', fontsize=15)
@@ -637,6 +653,7 @@ plt.axhline(y=0, color='black')
 plt.axvline(x=0, color='black')
 plt.xticks(np.arange(0, 21, 5), fontsize=15, rotation=0)
 plt.yticks(fontsize=15, rotation=0)
+plt.tight_layout()
 plt.show()
 
 # More data preparation
@@ -682,6 +699,7 @@ for this_time in time_array_LGN:
 
 
 # Plot of Figure 4M
+plt.figure()
 plt.errorbar(time_array_control[0:8],
              alignment_mean_control[0:8],
              alignment_std_control[0:8],
@@ -689,7 +707,7 @@ plt.errorbar(time_array_control[0:8],
              linewidth=4,
              capsize=6,
              capthick=4)
-plt.xlim([-1,21])
+plt.xlim([-1,22])
 plt.ylim([-1.2,1.2])
 plt.title('Average alignment as a function of time', fontsize=15)
 plt.xlabel('Time after spindle formation (minutes)', fontsize=15)
@@ -701,9 +719,11 @@ plt.axhline(y=0, color='black')
 plt.axvline(x=0, color='black')
 plt.xticks(fontsize=15, rotation=0)
 plt.yticks(np.arange(-1, 1.1, 0.5),fontsize=15, rotation=0)
+plt.tight_layout()
 plt.show()
 
 # Plot of Figure 4Q
+plt.figure()
 plt.errorbar(time_array_LGN[0:8],
              alignment_mean_LGN[0:8],
              alignment_std_LGN[0:8],
@@ -723,11 +743,12 @@ plt.axhline(y=0, color='black')
 plt.axvline(x=0, color='black')
 plt.xticks(fontsize=15, rotation=0)
 plt.yticks(np.arange(-1, 1.1, 0.5),fontsize=15, rotation=0)
+plt.tight_layout()
 plt.show()
 
 
-# Plot of Figure S4F
-
+# Plots of Figure S4F
+plt.figure()
 font_size = 20
 plt.hist(np.cos(2*np.array(angle_data_control_by_time[0])), color='blue', bins=15,alpha=0.5, density=True, range=[-1,1])
 plt.xlabel('alignment parameter', fontsize=font_size)
@@ -735,32 +756,39 @@ plt.ylabel('probability density', fontsize=font_size)
 plt.xticks([-1, -0.5, 0, 0.5, 1],fontsize=font_size, rotation=0)
 plt.yticks(fontsize=font_size, rotation=0)
 plt.ylim([0,3.2])
-plt.title('histogram of initial alignment parameter (control) ', fontsize=font_size)
+plt.title('histogram of initial alignment parameter\n (t=0min, control) ', fontsize=font_size)
+plt.tight_layout()
 plt.show()
 
+plt.figure()
 plt.hist(np.cos(2*np.array(angle_data_control_by_time[21])), color='blue', bins=15,alpha=0.5, density=True, range=[-1, 1])
 plt.xlabel('alignment parameter', fontsize=font_size)
 plt.ylabel('probability density', fontsize=font_size)
 plt.xticks([-1, -0.5, 0, 0.5, 1],fontsize=font_size, rotation=0)
 plt.yticks(fontsize=font_size, rotation=0)
-plt.title('histogram of final alignment parameter (control) ', fontsize=font_size)
+plt.title('histogram of final alignment parameter\n (t=21min, control) ', fontsize=font_size)
 plt.ylim([0,3.2])
+plt.tight_layout()
 plt.show()
 
+plt.figure()
 plt.hist(np.cos(2*np.array(angle_data_LGN_by_time[0])), color='red', bins=15,alpha=0.5, density=True, range=[-1,1])
 plt.xlabel('alignment parameter', fontsize=font_size)
 plt.ylabel('probability density', fontsize=font_size)
 plt.xticks([-1, -0.5, 0, 0.5, 1],fontsize=font_size, rotation=0)
 plt.yticks(fontsize=font_size, rotation=0)
-plt.title('histogram of initial alignment parameter (LGN RNAi) ', fontsize=font_size)
+plt.title('histogram of initial alignment parameter\n (t=0min, LGN RNAi) ', fontsize=font_size)
 plt.ylim([0,3.2])
+plt.tight_layout()
 plt.show()
 
+plt.figure()
 plt.hist(np.cos(2*np.array(angle_data_LGN_by_time[21])), color='red', bins=15,alpha=0.5, density=True, range=[-1, 1])
 plt.xlabel('alignment parameter', fontsize=font_size)
 plt.ylabel('probability density', fontsize=font_size)
 plt.xticks([-1, -0.5, 0, 0.5, 1],fontsize=font_size, rotation=0)
 plt.yticks(fontsize=font_size, rotation=0)
-plt.title('histogram of  final alignment parameter (LGN RNAi) ', fontsize=font_size)
+plt.title('histogram of  final alignment parameter\n (t=21min, LGN RNAi) ', fontsize=font_size)
 plt.ylim([0,3.2])
+plt.tight_layout()
 plt.show()
